@@ -1,0 +1,17 @@
+Todo esto en la Raspberry Pi.
+
+Arrancar
+
+docker compose up -d
+
+Parar
+
+docker compose down
+
+Para acceder al contenedor, ejecutar:
+
+docker exec --workdir /opt/kafka/bin/ -it kafka-1 sh
+
+Para ver los logs del sever, ejecutar:
+
+docker container logs -f kafka-1
