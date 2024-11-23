@@ -12,6 +12,6 @@ Para acceder al contenedor, ejecutar:
 
 docker exec --workdir /opt/kafka/bin/ -it kafka-1 sh
 
-Para ver los logs del sever, ejecutar:
+Para ver los logs del server, ejecutar:
 
 docker container logs -f kafka-1
