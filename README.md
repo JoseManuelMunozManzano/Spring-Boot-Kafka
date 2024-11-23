@@ -132,3 +132,27 @@ Para hacer un ejemplo de un grupo de consumers, necesitamos un topic con múltip
   - `./kafka-consumer-groups.sh --bootstrap-server localhost:29092,localhost:39092,localhost:49092 --delete --group my.new.group`
 - Eliminamos el topic `cg.demo.topic`
   - `./kafka-topics.sh --bootstrap-server localhost:29092,localhost:39092,localhost:49092 --delete --topic cg.demo.topic`
+
+## Coding Kafka with Spring Boot
+
+El diseño de este sistema podría describirse como una arquitectura dirigida por eventos, que constaría de muchos microservicios independientes.
+
+Cada uno de estos servicios puede consumir y/o producir múltiples tipos de eventos, accesos a BD relacionales o no relacionales...
+
+El caso es que hay muchas posibilidades que se podrían estudiar, pero todo eso queda fuera del alcance del curso.
+
+Nos centraremos en los elementos Kafka y Spring Boot de la implementación.
+
+Vamos a tener un servicio de envío que reaccionará a las entradas y generará un evento cuando se envíe el pedido.
+
+La comunicación entre producers y consumers se realiza a través de los topics en el broker. Este broker no se suele dibujar en los diagramas porque produce un ruido innecesario a la hora de entenderlos, pero la presencia del broker está implícita en los diagramas.
+
+Un patrón útil para reducir la carga de un servicio en un sistema es dividir la actividad de consulta y transferirla a otro servicio (repeatable pattern).
+
+Importante indicar que para este proyecto no se usa Zookeeper, ya deprecado, sino Kraft Cluster.
+
+1. `dispatch`
+
+Generamos el proyecto en `https://start.spring.io/` usando como dependencias `Lombok` y `Spring for Apache Kafka`.
+
+El proyecto se llama `dispatch`
