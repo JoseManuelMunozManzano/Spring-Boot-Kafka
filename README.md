@@ -15,6 +15,7 @@ Curso Udemy de Kafka con Spring Boot.
       - De aquí cogí el `docker-compose.yml`: `https://medium.com/towards-data-engineering/unlock-the-power-of-apache-kafka-with-the-official-docker-image-5a65192e618b`
         - En `01-Docker-Compose` tengo también ese archivo y como ejecutar
       - De aquí cogí distintos mandatos: `https://hub.docker.com/r/apache/kafka`
+      - Aquí indica como hacer que funcione en la LAN en distintos ordenadores y la WAN: `https://stackoverflow.com/questions/61101236/accessing-kafka-broker-from-outside-my-lan`
       - En la Raspberry Pi tuve que instalar Java
       - En la Raspberry Pi tuve también que instalar una versión de Kafka, para pruebas, siguiendo esta documentación:
         - Esta es la versión de Kafka (es más que posible que ya haya cambiado) que me descargué: `https://www.apache.org/dyn/closer.cgi?path=/kafka/3.9.0/kafka_2.13-3.9.0.tgz`
@@ -153,6 +154,4 @@ Importante indicar que para este proyecto no se usa Zookeeper, ya deprecado, sin
 
 1. `dispatch`
 
-Generamos el proyecto en `https://start.spring.io/` usando como dependencias `Lombok` y `Spring for Apache Kafka`.
-
-El proyecto se llama `dispatch`
+Generamos el proyecto `dispatch` usando la web `https://start.spring.io/`, y usando como dependencias `Lombok` y `Spring for Apache Kafka`.
