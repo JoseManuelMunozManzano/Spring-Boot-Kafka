@@ -2,6 +2,8 @@
 
 Hemos añadido un Consumer a nuestra aplicación.
 
+Hemos añadido un Producer a nuestra aplicación.
+
 ## Notas
 
 1. Generamos el proyecto en `https://start.spring.io/` usando como dependencias `Lombok` y `Spring for Apache Kafka`.
