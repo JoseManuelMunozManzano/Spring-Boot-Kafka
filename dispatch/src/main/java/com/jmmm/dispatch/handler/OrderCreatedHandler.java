@@ -34,6 +34,17 @@ public class OrderCreatedHandler {
     )
     public void listen(OrderCreated payload) {
         log.info("Received message: payload: " + payload);
-        dispatchService.process(payload);
+
+        // Manejamos una posible excepción que pudiera venir de DispatchService.
+        // Si no la manejamos aquí, el event de order.created sería reintentado una y otra vez.
+        //
+        // Registramos el error con un log y se marca como completado el event de creación de orden.
+        // Así no será consumido de nuevo.
+        // Más adelante revisitaremos esto para tratar lo que se llama dead letter topics.
+        try {
+            dispatchService.process(payload);
+        } catch (Exception e) {
+            log.error("Processing failure", e);
+        }
     }
 }

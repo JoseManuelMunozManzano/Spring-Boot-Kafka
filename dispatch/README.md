@@ -110,11 +110,37 @@ Para producción la mejor práctica indica que los topic deben crearse manualmen
 
 Por supuesto, deberíamos hacer testing del pipeline que crea la infraestructura, incluyendo los topics, en otros entornos remotos como QA y Sandbox antes de ejecutarlo en producción, para confirmar que no permite usar topics que no se han creado manualmente.
 
+7. Produce
+
+Vamos a introducir un `producer` Kafka en la aplicación.
+
+El fuente `DispatchService.java` tiene el método `process()` que actualmente está marcado con `todo`.
+
+Lo actualizamos para enviar un JSON event de salida al topic `order.dispatched`.
+
+Cada vez que se consuma un event order.created, ahora vamos a emitir un nuevo event order.dispatched
+
+```
+                  order.created                      order.dispatched
+console producer ------------------->   dispatch ------------------------>
+```
+
+Los eventos serán representados por un POJO y utilizaremos la clase KafkaTemplate de Spring Kafka para enviar el event.
+
+KafkaTemplate proporciona una abstracción sobre las API de cliente Kafka de bajo nivel para enviar y recibir eventos, haciendo que la tarea de enviar un evento sea sencilla para el desarrollador.
+
+Definiremos KafkaTemplate String Bean en nuestra clase de configuración y conectaremos a esta la fábrica producer que usaremos para configurar las propiedades de serialización de events para serializar el event a JSON.
+
+Por defecto, KafkaTemplate envía mensajes de forma asíncrona (dispara y olvida) El envío podría fallar, pero el service no sería consciente de ello.
+
+Por tanto, haremos que la llamada sea síncrona. Con esto, podemos ver si el event se escribe o no en el broker y, si falla, podemos lanzar una excepción que debe ser manejada en la aplicación, junto a su prueba unitaria.
+
 ## Testing
 
 - Clonar el repositorio
 - Construcción y testing de la aplicación (esto cada vez que se haga cualquier cambio en la app)
   - `mvn clean install`
+
 - Usaremos el CLI para enviar un evento `order.created` y ver como lo consume la aplicación
   - El kafka server son los contenedores docker de la Raspberry Pi
     - Confirmar que se están ejecutando y en caso contrario arrancarlos
