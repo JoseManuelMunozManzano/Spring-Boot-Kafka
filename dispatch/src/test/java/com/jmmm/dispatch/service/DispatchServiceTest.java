@@ -3,7 +3,10 @@ package com.jmmm.dispatch.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.jmmm.dispatch.message.OrderCreated;
+import com.jmmm.dispatch.util.TestEventData;
+
+import static java.util.UUID.randomUUID;
 
 class DispatchServiceTest {
 
@@ -16,6 +19,7 @@ class DispatchServiceTest {
 
     @Test
     void process() {
-        service.process("payload");
+        OrderCreated testEvent = TestEventData.builOrderCreatedEvent(randomUUID(), randomUUID().toString());
+        service.process(testEvent);
     }
 }

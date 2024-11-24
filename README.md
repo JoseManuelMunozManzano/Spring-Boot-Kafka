@@ -155,3 +155,8 @@ Importante indicar que para este proyecto no se usa Zookeeper, ya deprecado, sin
 1. `dispatch`
 
 Generamos el proyecto `dispatch` usando la web `https://start.spring.io/`, y usando como dependencias `Lombok` y `Spring for Apache Kafka`.
+
+Documentación:
+
+- `https://github.com/lydtechconsulting/introduction-to-kafka-with-spring-boot/wiki/Mockito`
+- `https://www.lydtechconsulting.com/blog-kafka-json-serialization.html`

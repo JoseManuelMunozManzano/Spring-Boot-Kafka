@@ -1,5 +1,6 @@
 package com.jmmm.dispatch.handler;
 
+import com.jmmm.dispatch.message.OrderCreated;
 import com.jmmm.dispatch.service.DispatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class OrderCreatedHandler {
     // Al listener le indicamos un id, los topics que debe escuchar y un id de grupo
     // que indica el consumer group al que debe pertenecer este consumer.
     @KafkaListener(id = "orderConsumerClient", topics = "order.created", groupId = "dispatch.order.created.consumer")
-    public void listen(String payload) {
+    public void listen(OrderCreated payload) {
         log.info("Received message: payload: " + payload);
         dispatchService.process(payload);
     }
