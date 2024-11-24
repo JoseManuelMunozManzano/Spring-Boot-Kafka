@@ -18,6 +18,8 @@ También usaremos la anotación `@Component` para indicar que la clase es un Bea
 
 Añadimos a `application.properties` configuración para deserialización. Con esto Spring sabrá que tipo de payload tendremos. Empezaremos con un tipo String.
 
+`spring.kafka.consumer.value-deserializer=org.apache.kafka.common.serialization.StringDeserializer`
+
 Empezamos a construir un conjunto de pruebas unitarias, usando para ello `JUnit` y `Mockito`.
 
 Ver documentación de Mockito:
@@ -40,11 +42,31 @@ Pasamos este POJO al código en vez del String.
 
 Cambiaremos `application.properties` para configurar este cambio, indicando el tipo por defecto del event (order).
 
+`spring.kafka.consumer.value-deserializer=org.springframework.kafka.support.serializer.JsonDeserializer`
+
+`spring.kafka.consumer.properties.spring.json.value.default.type=com.jmmm.dispatch.message.OrderCreated`
+
 Para deserializar un JSON vamos a necesitar la dependencia `Jackson`.
 
 Ejecutaremos la aplicación en la terminal y, en otra terminal, el producer para enviar un event formateado como un JSON.
 
 Veremos como la aplicación consume este evento.
+
+4. Deserializer Error Handling
+
+Vamos a ver como manejar los errores de deserialización JSON cuando este no es válido.
+
+Documentación:
+
+`https://www.lydtechconsulting.com/blog-kafka-poison-pill.html`
+
+Hacemos la demostración enviando un JSON inválido en la línea de comandos del producer y observando su comportamiento.
+
+Luego, abordamos la gestión de errores actualizando la configuración de `application.properties`, para usar gestión de errores de Spring Kafka y configurándolo para delegar en el deserializador JSON.
+
+`spring.kafka.consumer.value-deserializer=org.springframework.kafka.support.serializer.ErrorHandlingDeserializer`
+
+`spring.kafka.consumer.properties.spring.deserializer.value.delegate.class=org.springframework.kafka.support.serializer.JsonDeserializer`
 
 ## Testing
 
@@ -52,6 +74,7 @@ Veremos como la aplicación consume este evento.
 - Construcción y testing de la aplicación (esto cada vez que se haga cualquier cambio en la app)
   - `mvn clean install`
 - Usaremos el CLI para enviar un evento order.created y ver como lo consume la aplicación
+
   - El kafka server son los contenedores docker de la Raspberry Pi
     - Confirmar que se están ejecutando y en caso contrario arrancarlos
   - Abrir una terminal con nombre `App` y ejecutar esta aplicación con el mandato siguiente:
@@ -62,3 +85,10 @@ Veremos como la aplicación consume este evento.
     - Indicamos un texto, por ejemplo `test-message` (esto ya no, era una primera versión de un commit anterior)
     - Indicamos un JSON de este tipo: `{"orderId":"e12a1993-5d30-4d0a-b28e-d849f9bbe9c4", "item":"item-1"}`
   - Volvemos a la terminal donde se está ejecutando nuestra aplicación y veremos en un log el mensaje enviado desde el producer y que hemos consumido
+
+  - Para probar gestión de errores, tenemos que enviar desde el `producer` un JSON inválido
+    - Enviar un JSON de este tipo: `{"orderId":"123", "item":"invalid-1"}`
+  - Al volver a la terminal donde está siendo ejecutada nuestra app, veremos un bucle infinito porque Spring no puede deserializar este evento y lanza excepciones sin parar
+    - La excepción es `InvalidFormatException`
+  - Como ha ocurrido una excepción, el evento se vuelve a reenviar inmediatamente en el siguiente poll del consumer, lo que provoca otra excepción, así de forma infinita
+  - Al modificar `application.properties` el error solo se da una vez, no como bucle infinito, y permite consumir el siguiente evento
