@@ -86,6 +86,30 @@ La ventaja de todo esto es:
 - Podemos definir más fácilmente distintos beans para distintos escenarios, por ejemplo, diferentes listeners que tienen diferentes timeouts definidos
 - Nos da la confirmación, en tiempo de compilación, que las clases están correctamente definidas y en el classpath de la aplicación
 
+6. Create the Topics
+
+Comparamos la creación automática de topics con la manual.
+
+En este momento, nuestra aplicación está consumiento events de un topic llamado order.created
+
+No hemos tenido que crear manualmente este topic, y esto es debido a que no hemos anulado las configuraciones por defecto en el broker y en el consumer.
+
+En tiempo de desarrollo de la aplicación esto es una ventaja. Lo veremos también cuando lleguemos a ejecutar pruebas de integración en una sección posterior.
+
+Sin embargo, es posible crear topics incorrectos. Por ejemplo, un equipo puede entender que el topic debe llamarse order.updated en vez de order.created, y este topic order.updated se crearía por error cuando el producer enviara un event, aunque ninguna aplicación estaría esparando para consurmirlo.
+
+Como decimos, el broker está configurado con el parámetro `auto.create.topics` con valor a `true` por defecto.
+
+Y el consumer está configurado con el parámetro `allow.auto.create.topics` con valor a `true` por defecto.
+
+Si indicamos el valor del parámetro del broker a false, forzamos el requisito de que el topic se cree manualmente antes de que se pueda utilizar.
+
+Si indicamos el valor del parámetro del consumer a false, el consumer no podrá hacer polling de un topic que aún no se ha creado.
+
+Para producción la mejor práctica indica que los topic deben crearse manualmente, usando el CLI.
+
+Por supuesto, deberíamos hacer testing del pipeline que crea la infraestructura, incluyendo los topics, en otros entornos remotos como QA y Sandbox antes de ejecutarlo en producción, para confirmar que no permite usar topics que no se han creado manualmente.
+
 ## Testing
 
 - Clonar el repositorio
