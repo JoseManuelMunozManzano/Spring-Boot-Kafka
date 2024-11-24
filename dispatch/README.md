@@ -68,13 +68,30 @@ Luego, abordamos la gestión de errores actualizando la configuración de `appli
 
 `spring.kafka.consumer.properties.spring.deserializer.value.delegate.class=org.springframework.kafka.support.serializer.JsonDeserializer`
 
+5. Spring Bean Configuration
+
+Vamos a definir la configuración de deserialización programáticamente con Spring Beans.
+
+Hasta ahora habíamos definido las propiedades de deserialización en el archivo `application.properties`.
+
+Esto lo cambiamos para definir Beans de Spring explícitamente.
+
+Vamos a definir un `KafkaListenerContainerFactory` que utilizará Spring para construir el contenedor para nuestro `OrderCreatedHandler` anotado con `KafkaListener`.
+
+Le pasaremos un `ConsumerFactory`, que define la estrategia para crear la instancia del consumer.
+
+Y configuraremos el `ConsumerFactory` con las clases de deserialización que Spring utilizará para el proceso de deserialización.
+
+La ventaja de todo esto es:
+- Podemos definir más fácilmente distintos beans para distintos escenarios, por ejemplo, diferentes listeners que tienen diferentes timeouts definidos
+- Nos da la confirmación, en tiempo de compilación, que las clases están correctamente definidas y en el classpath de la aplicación
+
 ## Testing
 
 - Clonar el repositorio
 - Construcción y testing de la aplicación (esto cada vez que se haga cualquier cambio en la app)
   - `mvn clean install`
-- Usaremos el CLI para enviar un evento order.created y ver como lo consume la aplicación
-
+- Usaremos el CLI para enviar un evento `order.created` y ver como lo consume la aplicación
   - El kafka server son los contenedores docker de la Raspberry Pi
     - Confirmar que se están ejecutando y en caso contrario arrancarlos
   - Abrir una terminal con nombre `App` y ejecutar esta aplicación con el mandato siguiente:
@@ -92,3 +109,4 @@ Luego, abordamos la gestión de errores actualizando la configuración de `appli
     - La excepción es `InvalidFormatException`
   - Como ha ocurrido una excepción, el evento se vuelve a reenviar inmediatamente en el siguiente poll del consumer, lo que provoca otra excepción, así de forma infinita
   - Al modificar `application.properties` el error solo se da una vez, no como bucle infinito, y permite consumir el siguiente evento
+  - Y, en las notas (la 5), al cambiar de application.properties al archivo de configuración de Spring, también está controlado

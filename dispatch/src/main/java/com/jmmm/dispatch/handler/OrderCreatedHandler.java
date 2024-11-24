@@ -25,7 +25,13 @@ public class OrderCreatedHandler {
     // desde Kafka por nosotros y pasarlo a este listener.
     // Al listener le indicamos un id, los topics que debe escuchar y un id de grupo
     // que indica el consumer group al que debe pertenecer este consumer.
-    @KafkaListener(id = "orderConsumerClient", topics = "order.created", groupId = "dispatch.order.created.consumer")
+    // Para el paso 5 indicado en las notas del README añadimos el containerFactory.
+    // Este último no hacía falta cuando lo teníamos en application.properties.
+    @KafkaListener(id = "orderConsumerClient",
+                   topics = "order.created",
+                   groupId = "dispatch.order.created.consumer",
+                   containerFactory = "kafkaListenerContainerFactory"
+    )
     public void listen(OrderCreated payload) {
         log.info("Received message: payload: " + payload);
         dispatchService.process(payload);
