@@ -152,7 +152,7 @@ Un patrón útil para reducir la carga de un servicio en un sistema es dividir l
 
 Importante indicar que para este proyecto no se usa Zookeeper, ya deprecado, sino Kraft Cluster.
 
-`02-dispatch`
+`dispatch`
 
 Generamos el proyecto `dispatch` usando la web `https://start.spring.io/`, y usando como dependencias `Lombok` y `Spring for Apache Kafka`.
 
@@ -172,13 +172,15 @@ El service tracking determina el estado consumiendo events del topic `dispatch.t
 Dispatch ------------------------> Tracking ------------------------>
 ```
 
+![alt Dispatch-Tracking Service](./images/01-Dispatch-Tracking-Service.png)
+
 **CAMBIOS ESPERADOSs**
 
 Todo el código y los pasos requeridos para crear y probar el nuevo servicio ha sido cubierto en los módulos precedentes.
 
 **Dispatch Service**
 
-`DispatchService` para emitir un event `DispatchPreparing` sobre un topic llamado `dispatch.tracking`.
+`DispatchService` deberá emitir un event `DispatchPreparing` sobre un topic llamado `dispatch.tracking`.
 
 El payload para el event `DispatchPreparing` debería ser parecido a:
 
@@ -203,6 +205,8 @@ El event debería contener solo un valor `'PREPARING'` en este momento.
 
 Los cambios en ambos servicios deberían tener cobertura de unit tests.
 
-`03-tracking`
+`tracking`
 
-Continuamos desde el proyecto `02-dispatch` para hacer este ejercicio.
+Creamos un nuevo proyecto para Tracking.
+
+También añadimos la parte arriba indicada de `DispatchService` al proyecto `dispatch`.

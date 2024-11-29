@@ -1,4 +1,4 @@
-# 02-dispatch
+# dispatch
 
 Hemos añadido un Consumer a nuestra aplicación.
 
