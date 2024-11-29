@@ -152,7 +152,7 @@ Un patrón útil para reducir la carga de un servicio en un sistema es dividir l
 
 Importante indicar que para este proyecto no se usa Zookeeper, ya deprecado, sino Kraft Cluster.
 
-1. `dispatch`
+`02-dispatch`
 
 Generamos el proyecto `dispatch` usando la web `https://start.spring.io/`, y usando como dependencias `Lombok` y `Spring for Apache Kafka`.
 
@@ -160,3 +160,49 @@ Documentación:
 
 - `https://github.com/lydtechconsulting/introduction-to-kafka-with-spring-boot/wiki/Mockito`
 - `https://www.lydtechconsulting.com/blog-kafka-json-serialization.html`
+
+## Assignment - Tracking Service
+
+Continuamos con el proyecto `dispatch` y vamos a añadirle un nuevo servicio llamado `Tracking`.
+
+El service tracking determina el estado consumiendo events del topic `dispatch.tracking` y, a su vez, produce events que reflejan el estado actual de un dispatch.
+
+```
+           dispatch.tracking                   tracking.status
+Dispatch ------------------------> Tracking ------------------------>
+```
+
+**CAMBIOS ESPERADOSs**
+
+Todo el código y los pasos requeridos para crear y probar el nuevo servicio ha sido cubierto en los módulos precedentes.
+
+**Dispatch Service**
+
+`DispatchService` para emitir un event `DispatchPreparing` sobre un topic llamado `dispatch.tracking`.
+
+El payload para el event `DispatchPreparing` debería ser parecido a:
+
+`orderId: UUID`
+
+**Tracking Service**
+
+Crear un nuevo servicio llamado `TrackingService`. Seguir los mismos pasos usados para crear `DispatchService`.
+
+`TrackingService` debe consumir events desde el topic `dispatch.tracking` y emitir en event `TrackingStatusUpdated` en un nuevo topic llamado `tracking.status`.
+
+El payload para el event `TrackingStatusUpdated` debería parecerse a:
+
+```
+orderId: UUID
+status: Status
+```
+
+El event debería contener solo un valor `'PREPARING'` en este momento.
+
+**Testing**
+
+Los cambios en ambos servicios deberían tener cobertura de unit tests.
+
+`03-tracking`
+
+Continuamos desde el proyecto `02-dispatch` para hacer este ejercicio.
