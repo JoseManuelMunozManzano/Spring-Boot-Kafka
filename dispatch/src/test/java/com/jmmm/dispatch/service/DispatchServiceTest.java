@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.CompletableFuture;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import com.jmmm.dispatch.message.DispatchPreparing;
 import com.jmmm.dispatch.message.OrderCreated;
 import com.jmmm.dispatch.message.OrderDispatched;
 import com.jmmm.dispatch.util.TestEventData;
@@ -42,10 +44,12 @@ class DispatchServiceTest {
     @Test
     void process_Success() throws Exception {
         // Esto es como queremos que se comporte KafkaTemplate cuando se llame al método send().
+        when(kafkaProducerMock.send(anyString(), any(DispatchPreparing.class))).thenReturn(mock(CompletableFuture.class));
         when(kafkaProducerMock.send(anyString(), any(OrderDispatched.class))).thenReturn(mock(CompletableFuture.class));
 
         OrderCreated testEvent = TestEventData.builOrderCreatedEvent(randomUUID(), randomUUID().toString());
         service.process(testEvent);
+        verify(kafkaProducerMock, times(1)).send(eq("dispatch.tracking"), any(DispatchPreparing.class));
         verify(kafkaProducerMock, times(1)).send(eq("order.dispatched"), any(OrderDispatched.class));
     }
 
@@ -53,7 +57,23 @@ class DispatchServiceTest {
     @Test
     void process_ProducerThrowsException() throws Exception {
         OrderCreated testEvent = TestEventData.builOrderCreatedEvent(randomUUID(), randomUUID().toString());
-        doThrow(new RuntimeException("Producer failure")).when(kafkaProducerMock).send(eq("order.dispatched"), any(OrderDispatched.class));
+        doThrow(new RuntimeException("Producer failure")).when(kafkaProducerMock).send(eq("dispatch.tracking"), any(
+                DispatchPreparing.class));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> service.process(testEvent));
+
+        verify(kafkaProducerMock, times(1)).send(eq("dispatch.tracking"), ArgumentMatchers.any(DispatchPreparing.class));
+        verifyNoMoreInteractions(kafkaProducerMock);
+        assertThat(exception.getMessage(), equalTo("Producer failure"));
+    }
+
+    @Test
+    void process_Dispatch_Tracking_ProducerThrowsException() throws Exception {
+        when(kafkaProducerMock.send(anyString(), any(DispatchPreparing.class))).thenReturn(mock(CompletableFuture.class));
+
+        OrderCreated testEvent = TestEventData.builOrderCreatedEvent(randomUUID(), randomUUID().toString());
+        doThrow(new RuntimeException("Producer failure")).when(kafkaProducerMock).send(eq("order.dispatched"),
+                any(OrderDispatched.class));
 
         Exception exception = assertThrows(RuntimeException.class, () -> service.process(testEvent));
 

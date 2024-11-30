@@ -150,13 +150,19 @@ Desde la terminal, usando el producer, enviaremos un event order.created a la ap
 
 También desde otra terminal, usando el consumer, consumiremos el event order.dispatched que viene de la aplicación.
 
+9. Produce
+
+Vamos a introducir un nuevo `producer` Kafka en la aplicación.
+
+El fuente `DispatchService.java` tiene el método `process()` y lo actualizamos para enviar un JSON event de salida al topic `dispatch.tracking`.
+
 ## Testing
 
 - Clonar el repositorio
 - Construcción y testing de la aplicación (esto cada vez que se haga cualquier cambio en la app)
   - `mvn clean install`
 
-- Usaremos el CLI para enviar un evento `order.created`, ver como lo consume la aplicación y produce un `order.dispatched` que va a un consumer del CLI
+- Usaremos el CLI para enviar un evento `order.created`, ver como lo consume la aplicación y produce un `order.dispatched` y un `dispatch.tracking` que va a un consumer del CLI
   - El kafka server son los contenedores docker de la Raspberry Pi
     - Confirmar que se están ejecutando y en caso contrario arrancarlos
   - Abrir una terminal con nombre `App` y ejecutar esta aplicación con el mandato siguiente:

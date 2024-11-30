@@ -161,6 +161,8 @@ Documentación:
 - `https://github.com/lydtechconsulting/introduction-to-kafka-with-spring-boot/wiki/Mockito`
 - `https://www.lydtechconsulting.com/blog-kafka-json-serialization.html`
 
+![alt Dispatch Service](./images/01-Dispatch-Service.png)
+
 ## Assignment - Tracking Service
 
 Continuamos con el proyecto `dispatch` y vamos a añadirle un nuevo servicio llamado `Tracking`.
@@ -172,7 +174,9 @@ El service tracking determina el estado consumiendo events del topic `dispatch.t
 Dispatch ------------------------> Tracking ------------------------>
 ```
 
-![alt Dispatch-Tracking Service](./images/01-Dispatch-Tracking-Service.png)
+![alt Dispatch-Tracking Service](./images/02-Dispatch-Tracking-Service.png)
+
+![alt Tracking Service](./images/03-Tracking-Service.png)
 
 **CAMBIOS ESPERADOSs**
 

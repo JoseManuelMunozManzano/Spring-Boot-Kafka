@@ -3,6 +3,7 @@ package com.jmmm.dispatch.service;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import com.jmmm.dispatch.message.DispatchPreparing;
 import com.jmmm.dispatch.message.OrderCreated;
 import com.jmmm.dispatch.message.OrderDispatched;
 
@@ -10,7 +11,8 @@ import lombok.RequiredArgsConstructor;
 
 // Consumer
 // 2. Servicio que solo procesa el evento consumido.
-// Cada vez que se consuma un event order.created, ahora vamos a emitir un nuevo event order.dispatched
+// Cada vez que se consuma un event order.created, ahora vamos a emitir un event order.dispatched
+// y un segundo event dispatch.tracking
 @Service
 @RequiredArgsConstructor
 public class DispatchService {
@@ -18,6 +20,7 @@ public class DispatchService {
     // El nombre del topic suele venir de application.properties.
     // Lo indicamos como constante porque no hace falta complicarlo.
     private static final String ORDER_DISPATCHED_TOPIC = "order.dispatched";
+    private static final String DISPATCH_TRACKING_TOPIC = "dispatch.tracking";
 
     // KafkaTemplate proporciona métodos de utilidad para enviar y recibir events, con el fin
     // de enviar nuestro event saliente a Kafka.
@@ -28,6 +31,12 @@ public class DispatchService {
 
     public void process(OrderCreated orderCreated) throws Exception {
         // El payload
+        DispatchPreparing dispatchPreparing = DispatchPreparing.builder()
+                .orderId(orderCreated.getOrderId())
+                .build();
+
+        kafkaProducer.send(DISPATCH_TRACKING_TOPIC, dispatchPreparing).get();
+
         OrderDispatched orderDispatched = OrderDispatched.builder()
                         .orderid(orderCreated.getOrderId())
                         .build();

@@ -1,4 +1,4 @@
-package com.jmmm.dispatch;
+package com.jmmm.tracking;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,62 +21,43 @@ import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
-import com.jmmm.dispatch.message.OrderCreated;
+import com.jmmm.dispatch.message.DispatchPreparing;
 
-// Con @Configuration, Spring cargará estos beans en el contexto de la aplicación.
-// Con @ComponentScan indicamos a Spring donde encontrar otros componentes Spring definidos.
 @Configuration
 @ComponentScan(basePackages = {"com.jmmm"})
-public class DispatchConfiguration {
+public class TrackingConfiguration {
 
-  private static String TRUSTED_PACKAGES = "com.jmmm.dispatch.message";
-
-  // Este es nuestro KafkaListenerContainerFactory.
-  // Aunque se pueden usar distintos tipos esta es la implementación recomendada.
-  // Actuará como la factory para nuestro consumer Kafka OrderCreatedHandler.
-  // Por ahora indicamos como Key String y, aunque el consumer está consumiendo un
-  // tipo OrderCreated, vamos a utilizar un valor genérico Object.
-  // El objetivo de usar Object, es reutilizar este bean con cualquier consumer,
-  // sin importar el tipo de evento
   @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
-      ConsumerFactory<String, Object> consumerFactory) {
-    ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+  public ConcurrentKafkaListenerContainerFactory<String, DispatchPreparing> kafkaListenerContainerFactory(
+      ConsumerFactory<String, DispatchPreparing> consumerFactory) {
+    final ConcurrentKafkaListenerContainerFactory<String, DispatchPreparing> factory = new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory);
     return factory;
   }
 
-  // En el ConsumerFactory especificamos las propiedades que necesitamos.
-  // Estas propiedades son las mismas que pusimos en su momento en application.properties.
-  // El server de Kafka seguirá en application.properties (con otro nombre, sin el prefijo spring)
-  // porque probablemente será cambiado para cada entorno donde se despliegue este proyecto.
   @Bean
-  public ConsumerFactory<String, Object> consumerFactory(@Value("${kafka.bootstrap-servers}") String bootstrapServers) {
-    Map<String, Object> config = new HashMap<>();
+  public ConsumerFactory<String, DispatchPreparing> consumerFactory(
+      @Value("${kafka.bootstrap-servers}") String bootstrapServers) {
+    final Map<String, Object> config = new HashMap<>();
     config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
     config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
-    config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OrderCreated.class.getCanonicalName());
-    config.put(JsonDeserializer.TRUSTED_PACKAGES, TRUSTED_PACKAGES);
-    // Este deserializador de String lo usaremos para la key del mensaje. Es para más adelante.
+    config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, DispatchPreparing.class.getCanonicalName());
     config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-
     return new DefaultKafkaConsumerFactory<>(config);
   }
 
-  // Producer
   @Bean
   public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
     return new KafkaTemplate<>(producerFactory);
   }
 
   @Bean
-  public ProducerFactory<String, Object> producerFactory(@Value("${kafka.bootstrap-servers}")  String bootstrapServers) {
+  public ProducerFactory<String, Object> producerFactory(@Value("${kafka.bootstrap-servers}") String bootstrapServers) {
     Map<String, Object> config = new HashMap<>();
     config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
     config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     return new DefaultKafkaProducerFactory<>(config);
   }
-  
 }
