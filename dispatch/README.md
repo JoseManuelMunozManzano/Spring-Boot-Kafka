@@ -4,6 +4,8 @@ Hemos añadido un Consumer a nuestra aplicación.
 
 Hemos añadido un Producer a nuestra aplicación.
 
+Hemos añadido Test de Integración.
+
 ## Notas
 
 1. Generamos el proyecto en `https://start.spring.io/` usando como dependencias `Lombok` y `Spring for Apache Kafka`.
@@ -156,6 +158,29 @@ Vamos a introducir un nuevo `producer` Kafka en la aplicación.
 
 El fuente `DispatchService.java` tiene el método `process()` y lo actualizamos para enviar un JSON event de salida al topic `dispatch.tracking`.
 
+10. Test de integración
+
+Añadimos tests de integración, es decir, cargando el contexto de aplicación de Spring `@SpringBootTest`, instanciando los beans de Spring e integrándolo con Kafka.
+
+En vez de usar una instancia externa de Kafka, utilizaremos el broker de Kafka embebido en Spring Kafka.
+
+Ver en el package de tests, `integration/OrderDispatchIntegrationTest.java`. También se crea `resources/application-test.properties`.
+
+Hacemos uso de la librería de pruebas `awaitility` que nos permite esperar a que una condición se cumpla en un periodo de tiempo determinado.
+
+Es muy útil para probar flujos de mensajería asíncrona.
+
+```
+<dependency>
+    <groupId>org.awaitility</groupId>
+    <artifactId>awaitility</artifactId>
+    <version>4.2.2</version>
+    <scope>test</scope>
+</dependency>
+```
+
+Indicando el scope a test, la librería no se incluye en el archivo .jar al hacer el build.
+
 ## Testing
 
 - Clonar el repositorio
@@ -188,3 +213,6 @@ El fuente `DispatchService.java` tiene el método `process()` y lo actualizamos 
 - Como ha ocurrido una excepción, el evento se vuelve a reenviar inmediatamente en el siguiente poll del consumer, lo que provoca otra excepción, así de forma infinita
 - Al modificar `application.properties` el error solo se da una vez, no como bucle infinito, y permite consumir el siguiente evento
 - Y, en las notas (la 5), al cambiar de application.properties al archivo de configuración de Spring, también está controlado
+
+- Para probar el test de integración situado en `integration/OrderDispatchIntegrationTest.java` ejecutar:
+  - `mvn clean install`

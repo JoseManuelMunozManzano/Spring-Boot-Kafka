@@ -214,3 +214,35 @@ Los cambios en ambos servicios deberían tener cobertura de unit tests.
 Creamos un nuevo proyecto para Tracking.
 
 También añadimos la parte arriba indicada de `DispatchService` al proyecto `dispatch`.
+
+## Spring-Boot Integration Test
+
+Documentación: `https://www.lydtechconsulting.com/blog-kafka-consume-produce-testing.html`
+
+**¿Por qué necesitamos pruebas de integración?**
+
+En nuestros proyectos `dispatch` y `tracking` ya tenemos `pruebas unitarias`, que son pequeñas, rápidas de ejecutar y fáciles de escribir.
+
+Proporcionan información muy rápida sobre qué hacen las unidades individuales de código, y qué esperamos usando mocking para las llamadas a otras unidades de código y recursos externos. Podemos probar las distintas ramas de decisión y la gestión de errores dentro de nuestras unidades de código.
+
+Todo esto es necesario, pero los tests unitarios solo prueban unidades de código.
+
+Seguimos sin saber si estas unidades de código funcionan entre sí de la forma que deseamos.
+
+Aquí es donde entran en juego las `pruebas de integración`.
+
+Las pruebas de integración nos permiten verificar que las unidades individuales de código funcionan correctamente juntas.
+
+Podemos probar los flujos de procesamiento y afirmar que, para unas entradas dadas, obtenemos las salidas y efectos deseados.
+
+Una prueba de integración cargará el contexto de la aplicación e instanciará todos nuestros beans igual que cuando la aplicación se despliega en el entorno de producción.
+
+Podemos usar instancias en memoria de recursos externos como bases de datos y message brokers para probar que estamos manejando correctamente las respuestas de esos recursos externos. Y, al utilizar las intancias en memoria de los recursos externos, podemos ejecutar las pruebas de integración en el pipeline sin tener que levantar ninguna otra infraestructura. Incluso podemos ejecutarlos localmente para obtener información muy rápidamente.
+
+**Qué vamos a hacer**
+
+En particular con nuestro curso de Kafka, las pruebas unitarias no ejercitan la integración con el propio broker de Kafka. Nuestra prueba implementará un producer de prueba que utiliza una instancia de KafkaTemplate para enviar un event al topic `order.created` que será consumido por la aplicación.
+
+Definiremos también tests de consumer que recibirán los events emitidos por la aplicación. Esto es, el event sobre el topic `order.dispatched` y el event sobre el topic `dispatch.tracking`. Podremos afirmar entonces que se han recibido los events esperados.
+
+Indicar que con estas pruebas ya no será necesario iniciar una instancia real de Kafka instalada en nuestro ordenador local.
