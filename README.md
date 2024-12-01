@@ -396,3 +396,15 @@ Para ello utilizaremos la anotación de Spring Kafka `@Header` y, en concreto us
 Haremos lo mismo con `KafkaHeaders.RECEIVED_PARTITION`. Esto nos permitirá registrar la partition en la que se recibe cada event para verificar que los mensajes con la misma key se reciben en la misma partition.
 
 ![alt Key Messages](./images/04-Key-Messages.png)
+
+**Consuming Keyed Messages**
+
+Demostraremos que los mensajes producidos con la misma key serán escritos a, y consumidos desde la misma partition.
+
+La aplicación `dispatch-ordering` espera que la key se incluya en las cabeceras de los mensajes del event `order.created`. Y añade esta key a los headers de los mensajes que emite.
+
+Actualizaremos nuestra consola del producer para incluir una key y del mismo modo se actualizará la consola del consumer para imprimir la key que recibe de los headers de los mensajes.
+
+Para demostrar el impacto de incluir una message key, actualizaremos el número de partitions en el topic `order.created` usando la herramienta `kafka-topics` de la línea de comandos.
+
+A continuación, enviaremos varios mensajes con una mezcla de la misma key y diferentes keys y observaremos como los mensajes producidos con la misma key se escriben siempre en la misma partition y, por lo tanto, son consumidos por la misma instancia consumer de esa partition, garantizando que los mensajes se leen y se procesan en orden.
