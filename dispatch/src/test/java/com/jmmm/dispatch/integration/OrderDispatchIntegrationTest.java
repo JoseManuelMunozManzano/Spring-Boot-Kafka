@@ -65,7 +65,7 @@ public class OrderDispatchIntegrationTest {
     @Autowired
     private KafkaListenerEndpointRegistry registry;
 
-    // Lo utilizamos para enviar events desde nuestros tests.
+    // Lo utilizamos para enviar events desde nuestros tests, es decir el producer.
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -112,7 +112,7 @@ public class OrderDispatchIntegrationTest {
         testListener.dispatchPreparingCounter.set(0);
         testListener.orderDispatchedCounter.set(0);
 
-        registry.getListenerContainers().stream().forEach(container ->
+        registry.getListenerContainers().forEach(container ->
                         ContainerTestUtils.waitForAssignment(container, embeddedKafkaBroker.getPartitionsPerTopic()));
     }
 
