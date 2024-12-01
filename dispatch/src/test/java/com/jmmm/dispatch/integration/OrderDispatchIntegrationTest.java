@@ -67,7 +67,7 @@ public class OrderDispatchIntegrationTest {
 
     // Lo utilizamos para enviar events desde nuestros tests.
     @Autowired
-    private KafkaTemplate kafkaTemplate;
+    private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Autowired
     private KafkaTestListener testListener;
@@ -86,7 +86,7 @@ public class OrderDispatchIntegrationTest {
     }
 
     // Nuestro test consumer.
-    // Nos permite hacer asersiones sobre los events consumidos.
+    // Nos permite hacer aserciones sobre los events consumidos.
     // Para los tests, solo vamos a hacer seguimiento del número de events recibidos sobre cada topic.
     public static class KafkaTestListener {
         AtomicInteger dispatchPreparingCounter = new AtomicInteger(0);
@@ -105,6 +105,8 @@ public class OrderDispatchIntegrationTest {
         }
     }
 
+    // Para asegurarnos de que hay suficiente tiempo para que se asignen los topic partitions
+    // y el consumer está listo para consumir el evento enviado por el test.
     @BeforeEach
     void setUp() {
         testListener.dispatchPreparingCounter.set(0);
