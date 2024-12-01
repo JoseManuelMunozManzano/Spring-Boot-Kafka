@@ -246,3 +246,75 @@ En particular con nuestro curso de Kafka, las pruebas unitarias no ejercitan la 
 Definiremos también tests de consumer que recibirán los events emitidos por la aplicación. Esto es, el event sobre el topic `order.dispatched` y el event sobre el topic `dispatch.tracking`. Podremos afirmar entonces que se han recibido los events esperados.
 
 Indicar que con estas pruebas ya no será necesario iniciar una instancia real de Kafka instalada en nuestro ordenador local.
+
+## Multiple Instances & Consumer Group
+
+Ver la siguiente documentación: `https://www.lydtechconsulting.com/blog-kafka-rebalance-part1.html`
+
+Los consumer groups nos permiten gestionar múltiples instancias y facilitar el procesamiento paralelo. Durante este módulo vamos a ver:
+
+- Throughput (rendimiento)
+- Fault Tolerance
+  - Los consumer groups garantizan la continuidad de la actividad cuando se producen fallos en el sistema
+- Scaling
+  - Permite manipular cargas mayores con facilidad
+- Heartbeating
+  - Mecanismo para garantizar la continuidad del servicio
+- Rebalancing
+  - El broker redistribuye las particiones asociadas al consumer perdido entre los consumers activos
+  - Si el consumer perdido vuelve a estar activo, se vuelve a rebalancear
+
+Es muy importante indicar que, falle lo que falle, no se pierde ningún evento. El log continua grabando eventos, pero el offset (desplazamiento) no cambia.
+
+**¿Qué nos aportan los consumer groups?**
+
+- Isolation or Parallelism
+- Distinct Processing Logic
+- Throughput
+- Fault Tolerance
+
+El consumer puede formar parte de un grupo y procesr eventos en paralelo. O, el consumer puede trabajar aislado y leer su propio flujo de datos.
+
+La diferencia entre establecer un consumer como parte de un grupo o independiente se consigue estableciendo la propiedad groupId.
+
+Hay varias razones por las que podemos querer que más de un consumer lea el mismo flujo de datos. Las principales son el rendimiento y la tolerancia a fallos.
+
+Y a veces también hay buenas razones para no mostrar un flujo de datos.
+
+Por tanto, vamos a mirar distintos procesamientos lógicos en el que el servicio específico puede no necesitar rendimiento y tolerancia a fallos.
+
+Los consumer groups y la tolerancia de fallos van de la mano, ya que permiten a otros consumers compartir la carga en caso de fallo del servicio.
+
+Un fallo del servicio provocará un rebalanceo de la carga, y este rebalanceo se desencadena por una ruptura de la comunicación entre el consumer y el broker, debido a un fallo de Heartbeat o que el consumer ha superado el polling interval.
+
+Aunque el rebalanceo es estupendo, tiene el coste de detener el procesamiento de los topic partitions. Su impacto varía en función de la estrategia de rebalanceo elegida.
+
+Por tanto, el rebalanceo tiene la capacidad de mantener el sistema en funcionamiento, pero su uso excesivo también puede afectar gravemente el rendimiento del sistema.
+
+**Ejercicios con Consumer Groups**
+
+A partir de nuestro proyecto `dispatch` vamos a generar nuevos proyectos para cada uno de los ejercicios.
+
+Vamos a comparar y constrastar el comportamiento del consumer en función de los consumer groups a los que pertenece.
+
+En cada caso, ejecutaremos dos instancias de nuestras aplicaciones Spring Boot, para tener dos instancias consumidoras separadas ejecutándose.
+
+En el `primer ejercicio`, demostraremos el uso de un consumer group compartido con ambas instancias (Shared Consumer Group) pertenecientes al mismo grupo. Solo un consumer recibirá mensajes del topic partition order.created
+
+En el `segundo ejercicio`, demostraremos la conmutación por error del consumidor (Consumer Failover) Detendremos la instancia del consumer que tiene asignada la topic partition y observaremos como se reasigna la partición al segundo consumer. Este segundo consumer recibirá los mensajes order.created
+
+En el `tercer ejercicio`, mostraremos que las dos instancias consumers pertenecerán a consumer groups distintos, y observaremos cómo ambas instancias consumen el mensaje del topic partition order.created (Duplicate Consumption)
+
+**Primer Ejercicio: Consumer Group Compartido**
+
+Creamos el proyecto `dispatch-shared-consumer-group`.
+
+Ejecutaremos dos instancias de la aplicación `dispatch-shared-consumer-group`.
+
+La aplicación se actualizará para generar un ID de aplicación único al iniciarse. Cada instancia tendrá un ID único y lo añadiremos al evento de salida order.dispatched, para que podamos ver desde qué instancia se consumió el event order.created y se produjo el event order.dispatched.
+
+Como cada aplicación tiene un consumer definido escuchando el topic order.created, en el método handler, anotación @KafkaListener, especificando el consumer group `dispatch.order.created.consumer`, ambas instancias se iniciarán en el mismo grupo de consumers.
+
+El topic tiene una sola partition y se asignará una única instancia de consumidor de aplicaciones. Por lo tanto, solo una instancia de consumer consumirá el event y solo veremos un event de order.dispatched.
+
+Utilizaremos una terminal como producer y otra como consumer para demostrar este comportamiento.
