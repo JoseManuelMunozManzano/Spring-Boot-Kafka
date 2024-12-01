@@ -336,3 +336,63 @@ Luego demostraremos que ambas instancias consumers recibirán el evento que envi
 Ambos consumers en sus respectivos consumer group se suscriben al topic `order.created` y, por lo tanto, reciben este event, lo procesan y ambos envían events de salida, incluyendo el event `order.dispatched`.
 
 Por tanto, en la terminal del consumer se recibirán dos events de `order.dispatched` aunque solo hayamos enviado un único event `order.created`.
+
+## Keys and Partitions
+
+Ver la siguiente documentación: `https://www.lydtechconsulting.com/blog-kafka-message-keys.html`
+
+Vamos a ver ordenación de eventos.
+
+Tanto las claves como las particiones desempeñan un papel fundamental para que los events se procesen en orden.
+
+La ordenación se puede conseguir con relativamente poco esfuerzo utilizando los fundamentos de Spring y Apache Kafka.
+
+Vamos a ver:
+
+- ¿Qué es ordering?
+- Volvemos sobre las partitions
+- ¿Qué perturba el ordering?
+- Como garantizar el ordering cuando lo necesitamos obligatoriamente
+- Keys
+
+Ordering es poner en el orden correcto la secuencia en que ocurrieron los hechos.
+
+Imaginando que ocurran tres events, uno de creación, otro de actualización y otro de eliminación, estos eventos deben procesarse en ese orden, ya que de lo contrario el resultado podría comprometer la integridad de los datos del sistema.
+
+Indicar que muchas de las veces no es necesario ordenar los events, esto es algo que tenemos que estudiar a la hora de diseñar la solución.
+
+Volvemos a las particiones, porque es aquí como se manifiesta realmente este problema.
+
+Los mensajes se envían a través de topics, y un topic se compone al menos de una partition. El número de partitions que tiene cada topic se determina cuando se crea el topic, pero lo normal es que un topic tenga más de una partition.
+
+Las partitions contribuyen al rendimiento y la escalabilidad. Más partitions equivalen a más escalabilidad, pero hay un coste asociado a tener más partitions, que es más sobrecarga. Conviene elegir el número con cuidado y basarse en los requisitos de rendimiento esperados.
+
+Conviene recordar que, `cuando un event se escribe en un topic, en realidad se escribe en una partition de ese topic, y cada partition tendrá exactamente un consumer por consumer group`.
+
+Más particiones --> Más consumers --> Más rendimiento --> Más sobrecarga
+
+Sobre qué perturba el ordering, indicar que este puede fallar cuando los events se procesan a ritmos diferentes. Un event puede adelantarse a otro y, por tanto, perder su lugar en la secuencia mientras está en el topic.
+
+Por ejemplo, si un topic consta de tres partitions y tenemos tres events A, B y C que se tienen que procesar en ese orden, si cada event va a una partition diferente de ese topic, y si además tenemos varios consumers, entonces no tenemos control sobre el orden de procesamiento. Estamos completamente a merced de los consumers.
+
+Este problema se debe a que los events se han situado en partitions diferentes y, para solucionarlo, tenemos que tener todos los events relacionados en la misma partition. Así podemos evitar que los events se superpongan unos a otros, ya que una partition tiene exactamente un consumer (o ninguno)
+
+¿Cómo mantener los events relacionados en la misma partition? Utilizando una message key.
+
+La message key se utiliza para determinar en qué partition debe escribirse un mensaje.
+
+Cada mensaje escrito en Kafka puede incluir opcionalmente una message key. Esta key agrupa mensajes relacionados y debe ser lo más simple posible, como un ID de usuario o un ID de pedido...
+
+No es que una key más compleja cause problemas a Kafka, pero hará que el sistema sea más difícil de entender.
+
+El producer de Kafka calcula una hash key y determina en qué partition debe escribirse el mensaje. Todos los mensajes con la misma key se colocarán en la misma partition.
+
+**Proyecto ejemplo**
+
+Creamos el proyecto `dispatch-ordering` al que se le pasa una message key al handler.
+
+Para ello utilizaremos la anotación de Spring Kafka `@Header` y, en concreto usaremos `KafkaHeaders.RECEIVED_KEY`. Kafka extraerá la key del mensaje y la pasará al handler por nosotros.
+
+Haremos lo mismo con `KafkaHeaders.RECEIVED_PARTITION`. Esto nos permitirá registrar la partition en la que se recibe cada event para verificar que los mensajes con la misma key se reciben en la misma partition.
+
+![alt Key Messages](./images/04-Key-Messages.png)
