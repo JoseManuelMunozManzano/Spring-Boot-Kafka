@@ -293,7 +293,7 @@ Por tanto, el rebalanceo tiene la capacidad de mantener el sistema en funcionami
 
 **Ejercicios con Consumer Groups**
 
-A partir de nuestro proyecto `dispatch` vamos a generar nuevos proyectos para cada uno de los ejercicios.
+A partir de nuestro proyecto `dispatch` vamos a generar un nuevo proyecto para estos ejercicios.
 
 Vamos a comparar y constrastar el comportamiento del consumer en función de los consumer groups a los que pertenece.
 
@@ -318,3 +318,21 @@ Como cada aplicación tiene un consumer definido escuchando el topic order.creat
 El topic tiene una sola partition y se asignará una única instancia de consumidor de aplicaciones. Por lo tanto, solo una instancia de consumer consumirá el event y solo veremos un event de order.dispatched.
 
 Utilizaremos una terminal como producer y otra como consumer para demostrar este comportamiento.
+
+**Segundo Ejercicio: Consumer Failover**
+
+Ejercicio realizado sobre el proyecto `dispatch-shared-consumer-group`.
+
+Examinaremos el comportamiento de los consumers en caso de fallo. Con nuestras dos instancias de aplicación en ejecución y la primera instancia asignada al topic partition `order.created`, demostraremos el comportamiento de `Failover`, matando a esta primera instancia.
+
+A medida que el consumer abandona el consumer group, se dispara el rebalanceo del consumer group. A todos los consumers del grupo se les revocan sus topic partition asignadas y luego se reasignan. En este caso, el topic partition irá a la segunda instancia del consumer de aplicaciones.
+
+**Tercer Ejercicio: Duplicate Consumption**
+
+Ejecutaremos dos instancias de la aplicación `dispatch-shared-consumer-group`, pero esta vez asignaremos diferentes IDs de consumer group a cada instancia.
+
+Luego demostraremos que ambas instancias consumers recibirán el evento que enviemos usando la terminal del producer.
+
+Ambos consumers en sus respectivos consumer group se suscriben al topic `order.created` y, por lo tanto, reciben este event, lo procesan y ambos envían events de salida, incluyendo el event `order.dispatched`.
+
+Por tanto, en la terminal del consumer se recibirán dos events de `order.dispatched` aunque solo hayamos enviado un único event `order.created`.
