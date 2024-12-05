@@ -426,3 +426,11 @@ Para poder hacer esta actualización, moveremos la anotación `@KafkaListener` d
 También tendremos que eliminar el tipo de deserialización por defecto, el de `DispatchPreparing`, que habíamos indicado en la clase de Configuración. A cambio, Spring Kafka se basará en el type header que se incluye por defecto en los mensajes de Kafka producidor por un producer de Spring, como es el caso de nuestro Dispatch Service Producer.
 
 Spring Kafka utiliza el tipo por defecto para identificar qué paquetes son de confianza, es decir, pueden ser deserializados, y tenemos que indicar dichos paquetes.
+
+## Assignment: Multiple Event Types
+
+`DispatchService` se actualizará para generar un nuevo event que se enviará al topic existente, y el consumer de `TrackingService` se actualizará para consumir ambos tipos de events de este topic. `TrackingService` también se actualizará para generar un nuevo event `TrackingStatusUpdated`.
+
+Para esto se va a generar una nueva aplicación `dispatch-multiple-event-types` y seguiremos trabajando con la aplicación `tracking-multiple-event-types`.
+
+![alt Assignment](./images/06-Assignment.png)
