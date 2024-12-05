@@ -408,3 +408,21 @@ Actualizaremos nuestra consola del producer para incluir una key y del mismo mod
 Para demostrar el impacto de incluir una message key, actualizaremos el número de partitions en el topic `order.created` usando la herramienta `kafka-topics` de la línea de comandos.
 
 A continuación, enviaremos varios mensajes con una mezcla de la misma key y diferentes keys y observaremos como los mensajes producidos con la misma key se escriben siempre en la misma partition y, por lo tanto, son consumidos por la misma instancia consumer de esa partition, garantizando que los mensajes se leen y se procesan en orden.
+
+## Consuming Multiple Event Types
+
+Ver siguiente artículo: `https://www.lydtechconsulting.com/blog-kafka-fat-pipe-thin-pipe.html`
+
+Creamos la aplicación `tracking-multiple-event-types`.
+
+Esta sección trata sobre el consumo de múltiples tipos de events del mismo topic.
+
+Vamos a actualizar la configuración del service tracking para que esté preparado y pueda recibir events de distintos tipos para el mismo topic. En concreto vamos a recibir el nuevo event `DispatchCompleted`.
+
+![alt Multiple Events from Same Topic](./images/05-Multiple-Event-Types-From-Same-Topic.png)
+
+Para poder hacer esta actualización, moveremos la anotación `@KafkaListener` desde el nivel de método al nivel de clase. En el método usaremos la anotación `@KafkaHandler`. Esta anotación aparecerá para cada tipo de event que el consumer pueda recibir.
+
+También tendremos que eliminar el tipo de deserialización por defecto, el de `DispatchPreparing`, que habíamos indicado en la clase de Configuración. A cambio, Spring Kafka se basará en el type header que se incluye por defecto en los mensajes de Kafka producidor por un producer de Spring, como es el caso de nuestro Dispatch Service Producer.
+
+Spring Kafka utiliza el tipo por defecto para identificar qué paquetes son de confianza, es decir, pueden ser deserializados, y tenemos que indicar dichos paquetes.
