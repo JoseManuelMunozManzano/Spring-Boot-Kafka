@@ -20,10 +20,19 @@ En el método `listen` añadimos la anotación `@KafkaHandler`.
 
 Podemos crear varios métodos listen() anotados con `@KafkaHandler`. Estos pueden ser sobrecargados o nombrarse de manera diferente.
 
-Si recibimos un mensaje de este topic con un encabezado de tipo que no coincide con un método anotado con @KafkaHandler (un event desconocido de este topic), se lanzará un ListenerExecutionFail Exception y continuará el polling del siguiente mensaje.
+Si recibimos un mensaje de este topic con un encabezado de tipo que no coincide con un método anotado con @KafkaHandler (un event desconocido de este topic), se lanzará un `ListenerExecutionFailedException` y continuará el polling del siguiente mensaje.
+
+2. Trusted Packages
+
+Spring Kafka necesita saber como deserializar cada event del array de bytes almacenado en Kafka a JSON y mapearlo a la representación Java del event.
+
+Se modifica el fuente `TrackingConfiguration` para basarnos en la cabecera del mensaje que incluye el tipo de event, y Spring Kafka lo utilizará para seleccionar el tipo al que asignar el event deserializado.
+
+Spring Kafka añade automáticamente esta cabecera de mensaje cuando produce el event, a menos que se configure explícitamente el no hacerlo.
+
+Como los events que consume el Tracking Service se habrán originado en Dispatch Service, sabemos que esta cabecera estará presente. 
 
 ## Testing
 
 - Clonar el repositorio
-- Construcción y testing de la aplicación (esto cada vez que se haga cualquier cambio en la app)
-  - `mvn clean install`
+- Ejecutar el test de integración `TrackingStatusIntegrationTest.java`, método `testTrackingStatusFlow()`. 

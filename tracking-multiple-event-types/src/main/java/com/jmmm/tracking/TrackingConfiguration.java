@@ -27,22 +27,30 @@ import com.jmmm.dispatch.message.DispatchPreparing;
 @ComponentScan(basePackages = {"com.jmmm"})
 public class TrackingConfiguration {
 
+  // Confiamos en los eventos que vengan del package indicado.
+  private static String TRUSTED_PACKAGES = "com.jmmm.dispatch.message";
+
+  // El tipo pasa a ser Object en vez de DispatchPreparing porque se atiende a varios tipos de event.
   @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, DispatchPreparing> kafkaListenerContainerFactory(
-      ConsumerFactory<String, DispatchPreparing> consumerFactory) {
-    final ConcurrentKafkaListenerContainerFactory<String, DispatchPreparing> factory = new ConcurrentKafkaListenerContainerFactory<>();
+  public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
+      ConsumerFactory<String, Object> consumerFactory) {
+    final ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory);
     return factory;
   }
 
   @Bean
-  public ConsumerFactory<String, DispatchPreparing> consumerFactory(
+  public ConsumerFactory<String, Object> consumerFactory(
       @Value("${kafka.bootstrap-servers}") String bootstrapServers) {
     final Map<String, Object> config = new HashMap<>();
     config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
     config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
-    config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, DispatchPreparing.class.getCanonicalName());
+    // Ya no usamos este deserializador por defecto.
+    //config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, DispatchPreparing.class.getCanonicalName());
+    // Ahora hemos indicado los paquetes en los que confiamos, que es una lista de paquetes separados por comas
+    // y puede incluir comodines
+    config.put(JsonDeserializer.TRUSTED_PACKAGES, TRUSTED_PACKAGES);
     config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     return new DefaultKafkaConsumerFactory<>(config);
   }
