@@ -434,3 +434,92 @@ Spring Kafka utiliza el tipo por defecto para identificar qué paquetes son de c
 Para esto se va a generar una nueva aplicación `dispatch-multiple-event-types` y seguiremos trabajando con la aplicación `tracking-multiple-event-types`.
 
 ![alt Assignment](./images/06-Assignment.png)
+
+## Error Handling, Retry & Dead Letter Topics
+
+Vamos a ver como manejamos escenarios de error que requieren reintentos de mensajes, y como enrutamos mensajes a Dead Letter Topics con Spring Kafka.
+
+Podemos clasificar las excepciones lanzadas por la aplicación al procesar un mensaje consumido desde Kafka en dos grandes categorías:
+
+- Las que deben teminar el procesamiento y no volver a intentarse, porque se lanzará de forma infinita cada excepción
+- Aquellas excepciones que son el resultado de un problema temporal, como un error de conexión de red o un error de Bad Gateway. Reintentar más adelante el mensaje fallido puede resultar en un procesamiento exitoso
+
+Puede que no se quiera reintentar el mensaje de forma indefinida, así que veremos como garantizar que los mensajes sólo se reintentan un número determinado de veces.
+
+Si se agotan los reintentos o el tipo de excepción no debe ser reintentada veremos como enviar estos mensajes a un Dead Letter Topic. Son topics para aquellos mensajes que han sido consumidos pero no han podido completar su procesamiento. Se pueden tratar por separado, ya sea para intentar una corrección manual o para alertar basándose en los mensajes que tienen la Dead Letter.
+
+Para poder demostrar los flujos de excepción de reintentos y utilizar Dead Letter Topics, usaremos Wiremock para hacer stub del comportamiento de una llamada REST que nuestro Dispatch Service hará a un servicio externo. Podemos hacer stub de Wiremock para que devuelva una excepción de servicio no disponible representado una condición de error temporal. El mensaje debe ser reintentado en este escenario y ver que esta segunda vez tenga éxito.
+
+**Wiremock Overview**
+
+Wiremock es una librería que nos permite hacer un stub o mock de una llamada REST a un servicio web, y nos permite probar diferentes escenarios de éxito y fracaso.
+
+Nos permite especificar cuál debe ser la response del servicio externo en función de la request.
+
+Para hacer uso de Wiremock en nuestras pruebas de integración de Spring Boot, podemos utilizar el módulo Spring Cloud Contract. Esto facilita la puesta en marcha de un Wiremock server. Luego, podemos utilizar el Wiremock API proporcionado para hacer stub del comportamiento de nuestro Wiremock como necesitemos. O, podemos proporcionar una ubicación a un archivo(s) que declaran los stub requeridos.
+
+Wiremock también puede funcionar como un servicio independiente. Se ha proporcionado un repositorio Git con un Wiremock independiente que representa un servicio de acciones de terceros que nuestro `Dispath Service` llamará, y vamos a demostrar la ejecución de esto usando la línea de comandos. Este repositorio contiene los archivos de mapeo de request-response que se incluyen cuando se contruye el proyecto y que son utilizados por Wiremock en tiempo de ejecución.
+
+Usando un Wiremock independiente, podemos escribir pruebas de componentes y pruebas de sistemas con Wiremock puesto como si fuera el servicio externo.
+
+El repositorio Git con el Wiremock independiente es: `https://github.com/lydtechconsulting/introduction-to-kafka-wiremock`.
+
+**Retry: Introduction**
+
+Documentación: 
+
+- `https://www.lydtechconsulting.com/blog-kafka-spring-retry-topics.html`
+- `https://www.lydtechconsulting.com/blog-kafka-consumer-retry.html`
+- `https://www.lydtechconsulting.com/blog-kafka-message-batch-consumer-retry.html`
+
+Para demostrar el comportamiento de reintento, se requiere un mecanismo que desencadene excepciones, que serán lanzadas por la aplicación al recibir un event.
+
+Paa facilitar esto, vamos a añadir una llamada externa a un nuevo servicio llamado `Stock Service`.
+
+Para comprobar la disponibilidad del item que se está pidiendo, el service no se implantará realmente. En su lugar, usaremos Wiremock para simular las responses que se devolverán en función del REST request entrante que reciba, incluidas las responses que harán que se vuelva a intentar el event.
+
+Definiremos un backoff fijo con un máximo especificado de reintentos y el intervalo entre cada reintento.
+
+También especificaremos qué excepciones reintentar y cuáles no.
+
+Añadiremos la llamada a `Stock Service`, que se dispara al procesar cada event `order.created` que consume la aplicación y actualizaremos nuestro Exception handler para lanzar una excepción recuperable cuando se captura un error transitorio. En nuestro caso, un error de servidor devuelto por `Stock Service`, como una response de Bad Gateway o servicio no disponible.
+
+Luego actualizaremos los tests de integración para comprobar el comportamiento de reintento. Anotamos el test con la anotación `@AutoConfigureWiremock` y utilizamos la placeholder property `wiremock.server.port` en la URL de `stockServiceEndpoint` en las `application-test.properties`, que permiten sustituir el puerto dinámico en tiempo de ejecución.
+
+Por último, vamos a ejecutar la aplicación Wiremock independiente `Stock Service` usando la línea de comandos. Como ahora `Dispatch Service` hace una llamada a `Stock Service`, necesitamos esto en su lugar, con el fin de ejecutar el flujo completo de extremo a extremo.
+
+El repositorio Git con el Wiremock independiente es: `https://github.com/lydtechconsulting/introduction-to-kafka-wiremock`.
+
+**Retry: Coding**
+
+Se ha creado el nuevo proyecto `dispatch-error-handling` y se ha añadido todo lo necesario para gestionar errores.
+
+**Retry: Debugging Integration Tests**
+
+Utilizaremos el depurador de IDE para pasar por las nuevas pruebas de integración.
+
+Añadiremos puntos de interrupción en puntos clave del flujo, lo que nos permitirá ver claramente cuando se reintenta un mensaje.
+
+Tenemos que asegurarnos de que la opción de suspensión se establecen en `Thread` para que todos los hilos de ejecución no se detengan cuando se alcance el punto de interrupción. Si no, no podremos seguir el hilo de la solicitud.
+
+Estos son todos los puntos de interrupción que hay que poner para hacer el debug.
+
+![alt Debug](./images/07-Debug_01.png)
+
+![alt Debug](./images/08-Debug_02.png)
+
+![alt Debug](./images/09-Debug_03.png)
+
+Y lanzamos la ejecución con debug del test de integración `testOrderDispatchFlow_NotRetryableException`.
+
+**Retry: Commandline Demo**
+
+Vamos a ejercitar el comportamiento de reintento ejecutando el flujo de extremo a extremo en la línea de comandos.
+
+Comenzamos clonando, haciendo el build y ejecutando el Wiremock independiente (`https://github.com/lydtechconsulting/introduction-to-kafka-wiremock`).
+
+Iniciaremos la aplicación y luego produciremos mensajes en la línea de comandos que desencadenarán diferentes respuestas de Wiremock.
+
+Esto nos permitirá observar el comportamiento de reintento en acción.
+
+Ver README.md del proyecto `dispatch-error-handling`
