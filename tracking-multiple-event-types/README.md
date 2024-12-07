@@ -10,6 +10,12 @@ También tendremos que eliminar el tipo de deserialización por defecto, el de `
 
 Spring Kafka utiliza el tipo por defecto para identificar qué paquetes son de confianza, es decir, pueden ser deserializados, y tenemos que indicar dichos paquetes.
 
+**NUEVO CAMBIO**
+
+`DispatchService` se actualizará para generar un nuevo event que se enviará al topic existente, y el consumer de `TrackingService` se actualizará para consumir ambos tipos de events de este topic. `TrackingService` también se actualizará para generar un nuevo event `TrackingStatusUpdated`.
+
+![alt Assignment](../images/06-Assignment.png)
+
 ## Notas
 
 1. Kafka Handler
@@ -32,7 +38,18 @@ Spring Kafka añade automáticamente esta cabecera de mensaje cuando produce el 
 
 Como los events que consume el Tracking Service se habrán originado en Dispatch Service, sabemos que esta cabecera estará presente. 
 
+3. Para el nuevo cambio
+
+El Tracking Service requiere cambios para que ahora consuma el nuevo event `DispatchCompleted` y, a su vez, emita un event `TrackingStatusUpdated` con el nuevo estado "COMPLETED".
+
+El Tracking Service está consumiendo varios tipos de events de un solo topic. Esto requiere una reestructuración del consumidor, específicamente en relación con el uso de las anotaciones `@KafkaListener` y `@KafkaHandler`.
+
 ## Testing
 
 - Clonar el repositorio
-- Ejecutar el test de integración `TrackingStatusIntegrationTest.java`, método `testTrackingStatusFlow()`. 
+- Ejecutar el test de integración `TrackingStatusIntegrationTest.java`, método `testTrackingStatusFlow()`
+
+- Para el nuevo cambio ejecutar todos los tests. Se puede usar el comando o ir test a test ejecutándolos
+  - `mvn clean install`
+
+- Ejecución de los proyectos: ver el README.md del proyecto "padre" `dispatch-multiple-event-types`

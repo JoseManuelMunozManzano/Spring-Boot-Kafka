@@ -1,5 +1,6 @@
 package com.jmmm.tracking.service;
 
+import com.jmmm.dispatch.message.DispatchCompleted;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,7 @@ public class TrackingService {
 
   private final KafkaTemplate<String, Object> kafkaProducer;
 
-  public void process(DispatchPreparing dispatchPreparing) throws Exception {
+  public void processDispatchPreparing(DispatchPreparing dispatchPreparing) throws Exception {
 
     log.info("Received dispatch preparing message: " + dispatchPreparing);
 
@@ -26,6 +27,18 @@ public class TrackingService {
                           .orderId(dispatchPreparing.getOrderId())
                           .status(TrackingStatus.PREPARING)
                           .build();
+
+    kafkaProducer.send(TRACKING_STATUS_TOPIC, trackingStatusUpdated).get();
+  }
+
+  public void processDispatched(DispatchCompleted dispatchCompleted) throws Exception {
+
+    log.info("Received dispatched message: " + dispatchCompleted);
+
+    TrackingStatusUpdated trackingStatusUpdated = TrackingStatusUpdated.builder()
+            .orderId(dispatchCompleted.getOrderId())
+            .status(TrackingStatus.DISPATCHED)
+            .build();
 
     kafkaProducer.send(TRACKING_STATUS_TOPIC, trackingStatusUpdated).get();
   }

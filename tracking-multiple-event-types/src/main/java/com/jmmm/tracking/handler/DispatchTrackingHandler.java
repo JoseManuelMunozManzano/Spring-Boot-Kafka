@@ -1,5 +1,6 @@
 package com.jmmm.tracking.handler;
 
+import com.jmmm.dispatch.message.DispatchCompleted;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -24,12 +25,23 @@ public class DispatchTrackingHandler {
 
   @KafkaHandler
   public void listen(DispatchPreparing payload) throws Exception {
-    log.info("Received message: payload: " + payload);
+    log.info("DispatchPreparing. Received message: payload: " + payload);
 
     try {
-      trackingService.process(payload);
+      trackingService.processDispatchPreparing(payload);
     } catch (Exception e) {
-      log.error("Processing failure", e);
+      log.error("DispatchPreparing processing failure", e);
+    }
+  }
+
+  @KafkaHandler
+  public void listen(DispatchCompleted payload) throws Exception {
+    log.info("DispatchCompleted. Received message: payload: " + payload);
+
+    try {
+      trackingService.processDispatched(payload);
+    } catch (Exception e) {
+      log.error("DispatchCompleted processing failure", e);
     }
   }
 }

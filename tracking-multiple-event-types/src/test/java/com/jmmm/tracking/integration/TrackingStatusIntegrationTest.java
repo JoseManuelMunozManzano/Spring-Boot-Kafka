@@ -1,5 +1,6 @@
 package com.jmmm.tracking.integration;
 
+import com.jmmm.dispatch.message.DispatchCompleted;
 import com.jmmm.dispatch.message.DispatchPreparing;
 import com.jmmm.dispatch.message.TrackingStatusUpdated;
 import com.jmmm.tracking.TrackingConfiguration;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,6 +24,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -62,10 +65,11 @@ public class TrackingStatusIntegrationTest {
     }
 
     // Nuestro test consumer.
+    @KafkaListener(groupId = "KafkaIntegrationTests", topics = TRACKING_STATUS_TOPIC)
     public static class KafkaTestListener {
         AtomicInteger trackingStatusCounter = new AtomicInteger(0);
 
-        @KafkaListener(groupId = "KafkaIntegrationTests", topics = TRACKING_STATUS_TOPIC)
+        @KafkaHandler
         void receiveTrackingStatus(@Payload TrackingStatusUpdated payload) {
             log.debug("Received TrackingStatus: " + payload);
             trackingStatusCounter.incrementAndGet();
@@ -81,9 +85,18 @@ public class TrackingStatusIntegrationTest {
     }
 
     @Test
-    void testTrackingStatusFlow() throws Exception {
+    void testDispatchPreparingTrackingStatusFlow() throws Exception {
         DispatchPreparing dispatchPreparing = TestEventData.builDispatchPreparingEvent(randomUUID());
         sendMessage(DISPATCH_TRACKING_TOPIC, dispatchPreparing);
+
+        await().atMost(3, TimeUnit.SECONDS).pollDelay(100, TimeUnit.MILLISECONDS)
+                .until(testListener.trackingStatusCounter::get, equalTo(1));
+    }
+
+    @Test
+    void testDispatchCompletedTrackingStatusFlow() throws Exception {
+        DispatchCompleted dispatchCompleted = TestEventData.buildDispatchCompletedEvent(randomUUID(), LocalDate.now().toString());
+        sendMessage(DISPATCH_TRACKING_TOPIC, dispatchCompleted);
 
         await().atMost(3, TimeUnit.SECONDS).pollDelay(100, TimeUnit.MILLISECONDS)
                 .until(testListener.trackingStatusCounter::get, equalTo(1));
