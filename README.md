@@ -535,3 +535,14 @@ El nombre de la Dead Letter Topic es, por defecto, el nombre del topic original 
 Actualizaremos los integrations tests para probar que los events que han dado lugar a que se lance una excepción no reintentada y los que han sido reintentados pero han agotado los intentos, se envían al Dead Letter Topic.
 
 Notar que se puede hacer el debug igual que se ha visto un poco más arriba, en la sección `**Retry: Debugging Integration Tests**`.
+
+## Next Steps
+
+Cómo podemos seguir avanzando con Kafka:
+
+- Artículos sobre Kafka con detalles más avanzados sobre algunas de las areas tratadas en el curso: `https://www.lydtechconsulting.com/blog.html?group=eda`
+- Documentación oficial de Apache Kafka: `https://kafka.apache.org/documentation/`
+- Realizar pruebas de componentes automatizadas en las que la aplicación se pruebe con una instancia real de Kafka
+  - Se recomiendan test containers que permitan poner en marcha Kafka en un contenedor Docker como parte de la prueba
+  - Pruebas del sistema, pruebas de rendimiento, pruebas de carga y resistencia, pruebas en las que el equipo de desarrollo pueda colaborar con el equipo de control de calidad
+- Comprender los requisitos en función de los casos de uso que se nos plantean, ya que influirán enormemente en las decisiones que tengamos que tomar
